@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2025-05-28-01-set-default-localization-correction
+      author: rah
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        # D'abord, supprimer les enregistrements avec localization NULL qui créeraient des doublons
+        - sql:
+            sql: |
+              DELETE ci1 FROM card_image ci1
+              INNER JOIN card_image ci2 ON ci1.card_id = ci2.card_id
+              WHERE ci1.localization IS NULL 
+              AND ci2.localization = 'fr';
+
+        # Ensuite, mettre à jour les localisations NULL restantes vers 'fr'
+        - sql:
+            sql: |
+              UPDATE card_image 
+              SET localization = 'fr' 
+              WHERE localization IS NULL;
+      rollback:
+        # Le rollback est complexe car nous supprimons des données
+        # Considérer faire une sauvegarde d'abord
+        - sql:
+            sql: |
+              -- Impossible de faire un rollback sûr des enregistrements supprimés
+              -- Considérer créer une table de sauvegarde avant d'appliquer cette correction
+              SELECT 'Rollback impossible - données supprimées' as avertissement;
